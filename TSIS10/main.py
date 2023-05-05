@@ -1,97 +1,57 @@
 import psycopg2
-
-def create_table():
-    conn = psycopg2.connect(database = 'postgress', user = 'postgres', password = 'ayan2004')
-    # database connection
-    cursor = conn.cursor()
-    cursor.execute("""CREATE TABLE phonebook (
-    USER_NAME TEXT PRIMARY KEY NOT NULL,
-    PHONENUMBER TEXT NOT NULL);""")
-    print("[INFO] Table created successfully!")
-    conn.commit()
-    cursor.close()
-    conn.close()
-def add_user():
-    add = input().split()
-    postgre_query = """INSERT INTO phonebook( user_name, phonenumber) VALUES (%s, %s) """
-    data_toinsert = (add[0], add[1])
-    cursor.execute(postgre_query, data_toinsert)
-
-    conn.commit()
-    print("Data added!")
-
-
-def fetch_users():
-    cursor.execute("SELECT * FROM phonebook ")
-    table = cursor.fetchall()
-    for row in table:
-        c = row[0] + " " + row[1]
-        print(c)
-
-
-def update():
-    print("Type who's number you want to change")
-    name = input()
-    print("New number")
-    number = input()
-    postgre_query = """UPDATE phonebook SET phonenumber = %s WHERE user_name = %s """
-    cursor.execute(postgre_query, (number, name))
-
-    conn.commit()
-    print("Data updated!")
-
-
-def find():
-    print("Insert name who's number you want to see")
-    name = input()
-    cursor.execute("SELECT * FROM phonebook ")
-    table = cursor.fetchall()
-    for row in table:
-        if name == row[0]:
-            c = row[0] + " " + row[1]
-            print(c)
-
-
-def delete_user():
-    print("Insert name you want to delete")
-    name = input()
-    postgre_query = """DELETE FROM phonebook WHERE user_name = %s """
-    cursor.execute(postgre_query, (name,))
-
-    conn.commit()
-    print("Data deleted!")
+#from config import host,database,password,user
+host = "127.0.0.1"
+database = "postgres"
+password = "0510"
+user = "postgres"
 
 
 try:
-    cond = False
-    conn = psycopg2.connect("dbname=postgress user=postgres password=ayan2004")
-    cursor = conn.cursor()
+    
+    #connect to exist database///
+    connection = psycopg2.connect(
+        host = host,
+        user = user,
+        password = password,
+        database = database
+    )
 
-    while not cond:
-        print(
-            "\nChoose action:\n0.Create table\n1.Add user and number\n2.Change number of existing user\n3.Delete user\n4.Find number by name\n5.Show all names and numbers\n6.Exit")
-        action = input()
-        if action == '1':
-            print("Insert data")
-            add_user()
-        elif action == '0':
-            create_table()
-        elif action == '2':
-            update()
-        elif action == '3':
-            delete_user()
-        elif action == '4':
-            find()
-        elif action == '5':
-            fetch_users()
-        elif action == '6':
-            cond = True
+    
+    connection.autocommit = True
+    
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT version();"
+        )
+
+        print(f"Server version: {cursor.fetchone()}")
 
 
-except psycopg2.Error as e:
-    print("Failed!")
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """CREATE TABLE Phone(
+                id serial PRIMARY KEY,
+                first_name varchar(50) NOT NULL,
+                nick_name varchar(50) NOT NULL);"""
+        )
+        
+        print("[INFO] Table created succesfully")
 
+    
+    with connection.cursor() as cursor:
+         cursor.execute(
+            """INSERT INTO Phone (first_name, nick_name) VALUES
+            ('Nursultan', '87768792999'), ('Iliyas', '87777777777'),
+            ('Era', '87471234567')"""
+         )
+         print("[INFO] DATA was succesfully inserted")
+    
+    
+
+except Exception as _ex:
+    print("[INFO] Error while working with PostreSQL", _ex)
 finally:
-    cursor.close()
-    conn.close()
-    print("Connection closed!")
+    if connection:
+        # cursor.close()
+        connection.close()
+        print("[INFO] PostreSQL connection closed")
